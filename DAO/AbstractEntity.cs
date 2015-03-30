@@ -33,7 +33,7 @@ namespace DAO {
         /// <summary>
         /// Содержит набор where условий
         /// </summary>
-        private List<FilterWhere> _filterWhere;
+        private List<FilterWhereBase> _filterWhere;
         
         /// <summary>
         /// Содержит набор SET для апдейта
@@ -64,7 +64,7 @@ namespace DAO {
         protected AbstractEntity(string tableName) {
             _dbAdapter = new DbAdapter();
             TableName = tableName;
-            _filterWhere = new List<FilterWhere>();
+            _filterWhere = new List<FilterWhereBase>();
             _filterOrder = new List<FilterOrder>();
             _filterJoin = new List<FilterJoin>();
             _filterSet = new List<FilterSet>();
@@ -290,35 +290,35 @@ namespace DAO {
         /// <param name="value">Конкретное значение</param>
         /// <returns></returns>
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, int value) {
-            _filterWhere.Add(new FilterWhereSimple(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, long value) {
-            _filterWhere.Add(new FilterWhereSimple(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, string value) {
-            _filterWhere.Add(new FilterWhereSimple(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, DateTime value) {
-            _filterWhere.Add(new FilterWhereDate(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseDate(field, oper, value));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<int> value) {
-            _filterWhere.Add(new FilterWhereEnumerableSimple(field, oper, value.Select(v => (object)v)));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => (object)v)));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<long> value) {
-            _filterWhere.Add(new FilterWhereEnumerableSimple(field, oper, value.Select(v => (object)v)));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => (object)v)));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<string> value) {
-            _filterWhere.Add(new FilterWhereEnumerableSimple(field, oper, value.Select(v => (object)v)));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => (object)v)));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<DateTime> value) {
-            _filterWhere.Add(new FilterWhereEnumerableDateTime(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseEnumerableDateTime(field, oper, value));
             return this;
         }
 
@@ -327,7 +327,7 @@ namespace DAO {
         /// </summary>
         /// <param name="filterWhere"></param>
         /// <returns></returns>
-        public AbstractEntity<T> Where(IEnumerable<FilterWhere> filterWhere) {
+        public AbstractEntity<T> Where(IEnumerable<FilterWhereBase> filterWhere) {
             _filterWhere.AddRange(filterWhere);
             return this;
         }
@@ -491,7 +491,7 @@ namespace DAO {
                 where += "AND " + _filterWhere[i].TranslateToSql();
             }
             _query += where;
-            _filterWhere = new List<FilterWhere>();
+            _filterWhere = new List<FilterWhereBase>();
         }
 
         /// <summary>

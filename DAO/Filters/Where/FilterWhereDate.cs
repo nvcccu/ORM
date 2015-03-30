@@ -3,9 +3,9 @@ using DAO.Enums;
 using DAO.Extensions;
 
 namespace DAO.Filters.Where {
-    public class FilterWhereDate : FilterWhere {
+    public class FilterWhereBaseDate : FilterWhereBase {
         private DateTime Value { get; set; }
-        public FilterWhereDate(Enum field, PredicateCondition oper, DateTime value) {
+        public FilterWhereBaseDate(Enum field, PredicateCondition oper, DateTime value) {
             Field = field;
             Oper = oper;
             Value = value;

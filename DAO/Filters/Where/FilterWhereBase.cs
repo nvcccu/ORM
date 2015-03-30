@@ -2,7 +2,7 @@
 using DAO.Enums;
 
 namespace DAO.Filters.Where {
-    public abstract class FilterWhere {
+    public abstract class FilterWhereBase {
         protected Enum Field { get; set; }
         protected PredicateCondition Oper { get; set; }
         protected string StringFormat;

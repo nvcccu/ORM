@@ -55,7 +55,7 @@
     <Compile Include="Filters\Where\FilterWhereEnumerableDateTime.cs" />
     <Compile Include="Filters\Where\FilterWhereEnumerableSimple.cs" />
     <Compile Include="Filters\Where\FilterWhereSimple.cs" />
-    <Compile Include="Filters\Where\FilterWhere.cs" />
+    <Compile Include="Filters\Where\FilterWhereBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

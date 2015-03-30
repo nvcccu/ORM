@@ -5,9 +5,9 @@ using DAO.Enums;
 using DAO.Extensions;
 
 namespace DAO.Filters.Where {
-    public class FilterWhereEnumerableDateTime : FilterWhere {
+    public class FilterWhereBaseEnumerableDateTime : FilterWhereBase {
         private IEnumerable<DateTime> Value { get; set; }
-        public FilterWhereEnumerableDateTime(Enum field, PredicateCondition oper, IEnumerable<DateTime> value) {
+        public FilterWhereBaseEnumerableDateTime(Enum field, PredicateCondition oper, IEnumerable<DateTime> value) {
             Field = field;
             Oper = oper;
             Value = value;

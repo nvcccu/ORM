@@ -4,9 +4,9 @@ using DAO.Enums;
 using DAO.Extensions;
 
 namespace DAO.Filters.Where {
-    public class FilterWhereEnumerableSimple : FilterWhere {
+    public class FilterWhereBaseEnumerableSimple : FilterWhereBase {
         private IEnumerable<object> Value { get; set; }
-        public FilterWhereEnumerableSimple(Enum field, PredicateCondition oper, IEnumerable<object> value) {
+        public FilterWhereBaseEnumerableSimple(Enum field, PredicateCondition oper, IEnumerable<object> value) {
             Field = field;
             Oper = oper;
             Value = value;
