@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mono.Security">
+      <HintPath>bin\Mono.Security.dll</HintPath>
+    </Reference>
     <Reference Include="Npgsql">
       <HintPath>bin\Npgsql.dll</HintPath>
     </Reference>
@@ -47,6 +50,12 @@
     <Compile Include="Connector.cs" />
     <Compile Include="DbAdapter.cs" />
     <Compile Include="Enums\PredicateCondition.cs" />
+    <Compile Include="Extensions\PredicateConditionExtension.cs" />
+    <Compile Include="Filters\Where\FilterWhereDate.cs" />
+    <Compile Include="Filters\Where\FilterWhereEnumerableDateTime.cs" />
+    <Compile Include="Filters\Where\FilterWhereEnumerableSimple.cs" />
+    <Compile Include="Filters\Where\FilterWhereSimple.cs" />
+    <Compile Include="Filters\Where\FilterWhere.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
