@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using DAO.Enums;
 using Npgsql;
@@ -194,12 +195,13 @@ namespace DAO {
             }
             _dbAdapter.CloseConnection();
         }
-       
+        public string GetMemberName<TM, TValue>(Expression<Func<TM, TValue>> memberAccess) {
+            return ((MemberExpression)memberAccess.Body).Member.Name;
+        }
         /// <summary>
         /// Получение данных из таблицы
         /// todo: запилить возможность получения только нужных полей, указание полей поместить в Select()
         /// todo: продумать, как вытащить логику обращения к базе из этого метода
-        /// todo: AHTUNG! АТТЕНШН! Последовательность столбцов в базе должна совпадать с послдеовательностью филдов в DaoEntity'е. ПОФИКСИТЬ!!
         /// </summary>
         /// <returns></returns>
         public IEnumerable<T> GetData() {
@@ -215,23 +217,37 @@ namespace DAO {
                 int k = 0;
                 while (_dbAdapter.DataReader.Read()) {
                     var cur = new T();
-                    var properties = typeof (T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                    var properties = typeof (T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).ToList();
                     int i;
                     int j;
-                    for (i = 0; i < properties.Count(); i++) {
-                        var val = _dbAdapter.DataReader.GetValue(i);
-                        if (properties[i] != null && !(val is DBNull)) {
-                            properties[i].SetValue(cur, val, null);
+                    var propertiesCount = properties.Count();
+                    var values = new object[propertiesCount];
+                    if (_dbAdapter.DataReader.GetValues(values) != propertiesCount) {
+                        throw new Exception("Число полей в сущности не равно числу полей, возвращенных из запроса.");
+                    }
+                    for (i = 0; i < propertiesCount; i++) {
+                        var name = _dbAdapter.DataReader.GetName(i);
+                        var val = values[i];
+                        var propertyIndex = properties.FindIndex(p => String.Equals(p.Name, name, StringComparison.CurrentCultureIgnoreCase));
+                        if (properties[propertyIndex] != null && !String.IsNullOrEmpty(name) && !(val is DBNull)) {
+                            properties[propertyIndex].SetValue(cur, val, null);
                         }
                     }
                     foreach (var joinedEntity in JoinedEntities) {
                         var type = joinedEntity.GetType();
                         var entity = Activator.CreateInstance(type);
-                        properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                        properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).ToList();
+                        propertiesCount = properties.Count();
+                        values = new object[propertiesCount];
+                        if (_dbAdapter.DataReader.GetValues(values) != propertiesCount) {
+                            throw new Exception("Число полей в сущности не равно числу полей, возвращенных из запроса.");
+                        }
                         for (j = 0; j < properties.Count(); j++) {
-                            var val = _dbAdapter.DataReader.GetValue(j + i);
-                            if (properties[j] != null && !(val is DBNull)) {
-                                properties[j].SetValue(entity, val, null);
+                            var name = _dbAdapter.DataReader.GetName(i);
+                            var val = values[j];
+                            var propertyIndex = properties.FindIndex(p => String.Equals(p.Name, name, StringComparison.CurrentCultureIgnoreCase));
+                            if (properties[propertyIndex] != null && !String.IsNullOrEmpty(name) && !(val is DBNull)) {
+                                properties[propertyIndex].SetValue(entity, val, null);
                             }
                         }
                         i += j;

@@ -17,7 +17,21 @@ namespace Sandbox {
         }
 
         public long Id { get; set; }
+        public string Text { get; set; }
+        public int ParentId { get; set; }
+        public DateTime DateCreated { get; set; }
+    }
+    public class OfferCategory : AbstractEntity<OfferCategory> {
+        public OfferCategory() : base("OfferCategory") {}
+
+        public enum Fields {
+            [DbType(typeof (Int64))] Id,
+            [DbType(typeof (Int64))] ParentId,
+        }
+
+        
         public long ParentId { get; set; }
+        public long Id { get; set; }
     }
 
     internal class Program {
@@ -26,11 +40,11 @@ namespace Sandbox {
 
             var q = new DaoTest()
                 .Select()
-                .Where(DaoTest.Fields.Id, PredicateCondition.Greater, 0)
-                .Where(DaoTest.Fields.ParentId, PredicateCondition.In, new List<int> {2, 18})
-                .Where(DaoTest.Fields.DateCreated, PredicateCondition.In, new List<DateTime> {new DateTime(2015, 3, 30, 21, 41, 24)})
+                .Join(JoinType.Inner, new OfferCategory(), RetrieveMode.Retrieve)
+                .On(DaoTest.Fields.Id, PredicateCondition.Equal, OfferCategory.Fields.Id)
                 .GetData()
                 .ToList();
+            var qq = q[0].GetJoinedEntity<OfferCategory>();
             var w = 0;
         }
     }
