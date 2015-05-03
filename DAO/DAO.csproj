@@ -49,8 +49,10 @@
     <Compile Include="Attributes\DbType.cs" />
     <Compile Include="Connector.cs" />
     <Compile Include="DbAdapter.cs" />
+    <Compile Include="Enums\LogicOperator.cs" />
     <Compile Include="Enums\PredicateCondition.cs" />
     <Compile Include="Extensions\PredicateConditionExtension.cs" />
+    <Compile Include="Filters\Where\GroupFilterWhere.cs" />
     <Compile Include="Filters\Where\FilterWhereDate.cs" />
     <Compile Include="Filters\Where\FilterWhereEnumerableDateTime.cs" />
     <Compile Include="Filters\Where\FilterWhereEnumerableSimple.cs" />

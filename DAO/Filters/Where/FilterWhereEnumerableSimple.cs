@@ -5,8 +5,8 @@ using DAO.Extensions;
 
 namespace DAO.Filters.Where {
     public class FilterWhereBaseEnumerableSimple : FilterWhereBase {
-        private IEnumerable<object> Value { get; set; }
-        public FilterWhereBaseEnumerableSimple(Enum field, PredicateCondition oper, IEnumerable<object> value) {
+        private IEnumerable<string> Value { get; set; }
+        public FilterWhereBaseEnumerableSimple(Enum field, PredicateCondition oper, IEnumerable<string> value) {
             Field = field;
             Oper = oper;
             Value = value;

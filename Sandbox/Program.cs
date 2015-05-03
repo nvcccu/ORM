@@ -28,7 +28,7 @@ namespace Sandbox {
                 .Select()
                 .Where(DaoTest.Fields.Id, PredicateCondition.Greater, 0)
                 .Where(DaoTest.Fields.ParentId, PredicateCondition.In, new List<int> {2, 18})
-//                .Where(DaoTest.Fields.DateCreated, PredicateCondition.In, new List<DateTime> {new DateTime(2015, 3, 30, 21, 41, 24)})
+                .Where(DaoTest.Fields.DateCreated, PredicateCondition.In, new List<DateTime> {new DateTime(2015, 3, 30, 21, 41, 24)})
                 .Where(DaoTest.Fields.DateCreated, PredicateCondition.Less, new List<DateTime> {DateTime.Now})
                 .GetData()
                 .ToList();

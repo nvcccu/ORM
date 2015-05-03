@@ -34,6 +34,7 @@ namespace DAO {
         /// Содержит набор where условий
         /// </summary>
         private List<FilterWhereBase> _filterWhere;
+        private List<GroupFilterWhere> _filterWhereGroups;
         
         /// <summary>
         /// Содержит набор SET для апдейта
@@ -65,6 +66,7 @@ namespace DAO {
             _dbAdapter = new DbAdapter();
             TableName = tableName;
             _filterWhere = new List<FilterWhereBase>();
+            _filterWhereGroups = new List<GroupFilterWhere>();
             _filterOrder = new List<FilterOrder>();
             _filterJoin = new List<FilterJoin>();
             _filterSet = new List<FilterSet>();
@@ -289,12 +291,16 @@ namespace DAO {
         /// <param name="oper">Бинарный оператор</param>
         /// <param name="value">Конкретное значение</param>
         /// <returns></returns>
+//        public AbstractEntity<T> Where(Enum field, PredicateCondition oper, int value) {
+//            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value.ToString()));
+//            return this;
+//        }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, int value) {
-            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value.ToString()));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, long value) {
-            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value.ToString()));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, string value) {
@@ -306,21 +312,23 @@ namespace DAO {
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<int> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => (object)v)));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => v.ToString())));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<long> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => (object)v)));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => v.ToString())));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<string> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => (object)v)));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => v.ToString())));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<DateTime> value) {
             _filterWhere.Add(new FilterWhereBaseEnumerableDateTime(field, oper, value));
             return this;
         }
+
+   
 
         /// <summary>
         /// Добавляет условие where
@@ -480,13 +488,25 @@ namespace DAO {
         /// Транслирует все условия where в SQL
         /// </summary>
         /// <returns></returns>
-         private void TranslateWhere() {
-            if (!_filterWhere.Any()) {
+//        private void TranslateWhere() {
+//            if (!_filterWhere.Any()) {
+//                return;
+//            }
+//            var where = "WHERE ";
+//          
+//            where += _filterWhere.First().TranslateToSql();
+//            for (var i = 1; i < _filterWhere.Count; i++) {
+//                where += "AND " + _filterWhere[i].TranslateToSql();
+//            }
+//            _query += where;
+//            _filterWhere = new List<FilterWhereBase>();
+//        }
+        private void TranslateWhere() {
+            if (!_filterWhereGroups.Any()) {
                 return;
             }
             var where = "WHERE ";
-          
-            where += _filterWhere.First().TranslateToSql();
+            where += _filterWhereGroups.First().TranslateToSql();
             for (var i = 1; i < _filterWhere.Count; i++) {
                 where += "AND " + _filterWhere[i].TranslateToSql();
             }
