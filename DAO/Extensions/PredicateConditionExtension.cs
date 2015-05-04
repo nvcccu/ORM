@@ -1,8 +1,9 @@
-﻿using DAO.Enums;
+﻿using System;
+using DAO.Enums;
 
 namespace DAO.Extensions {
     public static class PredicateConditionExtension {
-        public static string GetMathOper(this PredicateCondition oper) {
+        public static string GetPredicateCondition(this PredicateCondition oper) {
             switch (oper) {
                 case PredicateCondition.Equal:
                     return " = ";
@@ -22,9 +23,8 @@ namespace DAO.Extensions {
                     return " NOT IN ";
                 case PredicateCondition.Like:
                     return " LIKE ";
-                // todo: лень сразу писать все операторы :-)
                 default:
-                    return null;
+                    throw new Exception("Неизвестное условие предиката.");
             }
         }
     }
