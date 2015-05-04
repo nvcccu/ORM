@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using DAO.Enums;
 using DAO.Extensions;
+using DAO.Filters.Join;
+using DAO.Filters.Order;
+using DAO.Filters.Set;
 using DAO.Filters.Where;
 using Npgsql;
 
@@ -13,63 +14,34 @@ namespace DAO {
     public interface IAbstractEntity {
         string TableName { get; set; }
         List<IAbstractEntity> JoinedEntities { get; set; }
-        object Insert();
     }
 
-    /// <summary>
-    /// Шаблон для класса-сущности таблицы
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
     public abstract class AbstractEntity<T> : IAbstractEntity where T: new() {
-        /// <summary>
-        /// Адаптер доступа к базе
-        /// </summary>
         private readonly DbAdapter _dbAdapter;
-
-        /// <summary>
-        /// Название таблицы, на которую смотрит
-        /// </summary>
-        public string TableName { get; set; }
-
-        /// <summary>
-        /// Содержит набор where условий
-        /// </summary>
         private List<FilterWhereBase> _filterWhere;
-        
-        /// <summary>
-        /// Содержит набор SET для апдейта
-        /// </summary>
         private List<FilterSet> _filterSet;
-
-        /// <summary>
-        /// набор join'ов
-        /// </summary>
         private List<FilterJoin> _filterJoin;
-
-        /// <summary>
-        /// набор сортировок
-        /// </summary>
         private List<FilterOrder> _filterOrder;
-
-        public List<IAbstractEntity> JoinedEntities { get; set; }
-
-        /// <summary>
-        /// sql-запрос
-        /// </summary>
         private string _query;
 
-        /// <summary>
-        /// Конструктор по умолчанию
-        /// </summary>
-        /// <param name="tableName"></param>
+        public string TableName { get; set; }
+        public List<IAbstractEntity> JoinedEntities { get; set; }
+        
+#if DEBUG
+        // Для тестов.
+        public string Query {
+            get { return _query; }
+        }
+#endif
+
         protected AbstractEntity(string tableName) {
             _dbAdapter = new DbAdapter();
-            TableName = tableName;
             _filterWhere = new List<FilterWhereBase>();
             _filterOrder = new List<FilterOrder>();
             _filterJoin = new List<FilterJoin>();
             _filterSet = new List<FilterSet>();
             JoinedEntities = new List<IAbstractEntity>();
+            TableName = tableName;
         }
 
         public AbstractEntity<T> Update() {
@@ -86,7 +58,7 @@ namespace DAO {
         }
 
         /// <summary>
-        /// Сохраняет сущность в базу БЕЗ АЙДИШКИ и возвращает АЙДИШКУ
+        /// Сохраняет в базу сущность БЕЗ АЙДИШКИ и возвращает присвоенную АЙДИШКУ
         /// </summary>
         public object Insert() {
             object id = null;
@@ -121,7 +93,7 @@ namespace DAO {
             return id;
         }
         /// <summary>
-        /// Сохраняет сущность в базу С АЙДИШКОЙ
+        /// Сохраняет в базу сущность С АЙДИШКОЙ
         /// TODO: Подставлять имя первичного ключа по атрибуту, а не брать первую пропертю
         /// </summary>
         public void Save() {
@@ -167,20 +139,6 @@ namespace DAO {
         }
 
         /// <summary>
-        /// Выполняет запрос здесь и сейчас без ожидания результата
-        /// </summary>
-        private void RunScript() {
-            _dbAdapter.OpenConnection();
-            _dbAdapter.Command = new NpgsqlCommand(_query, _dbAdapter.Connection);
-            try {
-                _dbAdapter.Command.ExecuteScalar();
-            } catch (Exception ex) {
-                Console.WriteLine(ex);
-            }
-            _dbAdapter.CloseConnection();
-        }
-
-        /// <summary>
         /// выполняет запрос без возвращения данных
         /// </summary>
         public void ExecuteScalar() {
@@ -197,9 +155,7 @@ namespace DAO {
             }
             _dbAdapter.CloseConnection();
         }
-        public string GetMemberName<TM, TValue>(Expression<Func<TM, TValue>> memberAccess) {
-            return ((MemberExpression)memberAccess.Body).Member.Name;
-        }
+
         /// <summary>
         /// Получение данных из таблицы
         /// todo: запилить возможность получения только нужных полей, указание полей поместить в Select()
@@ -275,18 +231,6 @@ namespace DAO {
             return null;
         }
 
- 
-        /// <summary>
-        /// Добавляет условие where
-        /// </summary>
-        /// <param name="field">Контролируемый столбец</param>
-        /// <param name="oper">Бинарный оператор</param>
-        /// <param name="value">Конкретное значение</param>
-        /// <returns></returns>
-//        public AbstractEntity<T> Where(Enum field, PredicateCondition oper, int value) {
-//            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value.ToString()));
-//            return this;
-//        }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, int value) {
             _filterWhere.Add(new FilterWhereBaseSimple(LogicOperator.And, field, oper, value.ToString()));
             return this;
@@ -319,26 +263,11 @@ namespace DAO {
             _filterWhere.Add(new FilterWhereBaseEnumerableDateTime(LogicOperator.And, field, oper, value));
             return this;
         }
-
-   
-
-        /// <summary>
-        /// Добавляет условие where
-        /// </summary>
-        /// <param name="filterWhere"></param>
-        /// <returns></returns>
         public AbstractEntity<T> Where(IEnumerable<FilterWhereBase> filterWhere) {
             _filterWhere.AddRange(filterWhere);
             return this;
         }
 
-        /// <summary>
-        /// добавляет join
-        /// </summary>
-        /// <param name="joinType"></param>
-        /// <param name="targetTable"></param>
-        /// <param name="retrieveMode"></param>
-        /// <returns></returns>
         public AbstractEntity<T> Join(JoinType joinType, IAbstractEntity targetTable, RetrieveMode retrieveMode) {
             JoinedEntities.Add(targetTable);
             _filterJoin.Add(new FilterJoin {
@@ -348,15 +277,6 @@ namespace DAO {
             });
             return this;
         }
-
-        /// <summary>
-        /// добавляет inner join
-        /// todo: допаисать все остальные джоины
-        /// </summary>
-        /// <param name="joinType"></param>
-        /// <param name="targetTable"></param>
-        /// <param name="retrieveMode"></param>
-        /// <returns></returns>
         public AbstractEntity<T> InnerJoin(IAbstractEntity targetTable, RetrieveMode retrieveMode) {
             JoinedEntities.Add(targetTable);
             _filterJoin.Add(new FilterJoin {
@@ -366,34 +286,14 @@ namespace DAO {
             });
             return this;
         }
-
-        /// <summary>
-        /// добавляет к последнему джоину условия присоединения
-        /// </summary>
-        /// <param name="joinConditions"></param>
-        /// <returns></returns>
         public AbstractEntity<T> On(List<JoinCondition> joinConditions) {
             _filterJoin.Last().JoinConditions.AddRange(joinConditions);
             return this;
         }
-
-        /// <summary>
-        /// добавляет к последнему джоину одно условие присоединения
-        /// </summary>
-        /// <param name="joinCondition"></param>
-        /// <returns></returns>
         public AbstractEntity<T> On(JoinCondition joinCondition) {
             _filterJoin.Last().JoinConditions.Add(joinCondition);
             return this;
         }
-
-        /// <summary>
-        /// добавляет к последнему джоину одно условие присоединения
-        /// </summary>
-        /// <param name="fieldFrom"></param>
-        /// <param name="oper"></param>
-        /// <param name="fieldTarget"></param>
-        /// <returns></returns>
         public AbstractEntity<T> On(Enum fieldFrom, PredicateCondition oper, Enum fieldTarget) {
             _filterJoin.Last().JoinConditions.Add(new JoinCondition {
                 FieldFrom = fieldFrom,
@@ -403,12 +303,6 @@ namespace DAO {
             return this;
         }
 
-        /// <summary>
-        /// добавляет условие ORDER BY
-        /// </summary>
-        /// <param name="field"></param>
-        /// <param name="orderType"></param>
-        /// <returns></returns>
         public AbstractEntity<T> OrderBy(Enum field, OrderType orderType) {
             _filterOrder.Add(new FilterOrder(field, orderType));
             return this;
@@ -445,47 +339,11 @@ namespace DAO {
             return this;
         }
 
-        /// <summary>
-        /// Удаляет все данные из базы
-        /// </summary>
-        /// <returns></returns>
-        public void Truncate() {
-            _query = "TRUNCATE TABLE " + TableName + ";";
-            RunScript();
-        }
-
-        /// <summary>
-        /// Приводит правое значение к соответствующему условию виду
-        /// </summary>
-        /// <returns></returns>
-        private string PrepareTargetValue(PredicateCondition predicateCondition, object value) {
-            if (predicateCondition == PredicateCondition.In || predicateCondition == PredicateCondition.NotIn) {
-                if (value is IEnumerable) {
-                    var result = "(";
-                    IEnumerable valueList = ((IEnumerable)value);
-                    foreach (var val in valueList) {
-                        result = result + " '" + val.ToString() + "', ";
-                    }
-                    return result.Substring(0, result.Length - 2) + ")";
-                } else {
-                    throw new Exception("Недопустимый аргумент для перечисления в IN");
-                }
-            }
-            else {
-                return "'" + value + "' ";
-            }
-        }
-
-        /// <summary>
-        /// Транслирует все условия where в SQL
-        /// </summary>
-        /// <returns></returns>
         private void TranslateWhere() {
             if (!_filterWhere.Any()) {
                 return;
             }
             var where = "WHERE ";
-          
             where += _filterWhere.First().TranslateToSql(true);
             for (var i = 1; i < _filterWhere.Count; i++) {
                 where += _filterWhere[i].TranslateToSql(false);
@@ -494,9 +352,6 @@ namespace DAO {
             _filterWhere = new List<FilterWhereBase>();
         }
 
-        /// <summary>
-        /// транслирует join в sql
-        /// </summary>
         private void TranslateJoin() {
             if (!_filterJoin.Any()) {
                 return;
@@ -515,9 +370,6 @@ namespace DAO {
             _filterJoin = new List<FilterJoin>();
         }
 
-        /// <summary>
-        /// транслирует все условия ORDER BY в sql
-        /// </summary>
         private void TranslateOrder() {
             if (!_filterOrder.Any()) {
                 return;
@@ -533,9 +385,6 @@ namespace DAO {
             _filterOrder = new List<FilterOrder>();
         }
 
-        /// <summary>
-        /// транслирует все условия SET в sql
-        /// </summary>
         private void TranslateSet() {
             if (!_filterSet.Any()) {
                 return;
@@ -549,90 +398,6 @@ namespace DAO {
             }
             _query += set;
             _filterSet = new List<FilterSet>();
-        }
-    }
-
-    public class JoinCondition {
-        /// <summary>
-        /// Поле исходной таблицы
-        /// </summary>
-        public Enum FieldFrom { get; set; }
-
-        /// <summary>
-        /// Оператор проверки в предикате
-        /// </summary>
-        public PredicateCondition Oper { get; set; }
-
-        /// <summary>
-        /// Поле целевой таблицы
-        /// </summary>
-        public Enum FieldTarget { get; set; }
-
-    }
-
-    /// <summary>
-    /// сортировка
-    /// </summary>
-    public class FilterOrder {
-        /// <summary>
-        /// сортируемое поле
-        /// </summary>
-        public Enum Field;
-
-        /// <summary>
-        /// тип сортировки
-        /// </summary>
-        public OrderType OrderType;
-
-        public FilterOrder(Enum field, OrderType orderType) {
-            Field = field;
-            OrderType = orderType;
-        }
-    }
-
-    /// <summary>
-    /// Джоин к таблице
-    /// </summary>
-    public class FilterJoin {
-        /// <summary>
-        /// Тип join'а
-        /// </summary>
-        public JoinType JoinType { get; set; }
-
-        /// <summary>
-        /// К чему осуществляется join
-        /// </summary>
-        public IAbstractEntity TargetTable { get; set; }
-
-        /// <summary>
-        /// Условия join'а
-        /// </summary>
-        public List<JoinCondition> JoinConditions { get; set; }
-
-        /// <summary>
-        /// извлекать ли присоединенные сущности
-        /// </summary>
-        public RetrieveMode RetrieveMode { get; set; }
-
-        public FilterJoin() {
-            JoinConditions = new List<JoinCondition>();
-        }
-    }
-
-    public class FilterSet {
-        /// <summary>
-        /// 
-        /// </summary>
-        public Enum Field { get; private set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public object Value { get; private set; }
-
-        public FilterSet(Enum field, Object value) {
-            Field = field;
-            Value = value;
         }
     }
 }
