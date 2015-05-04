@@ -5,15 +5,23 @@ namespace DAO.Extensions {
         public static string GetMathOper(this PredicateCondition oper) {
             switch (oper) {
                 case PredicateCondition.Equal:
-                    return "=";
+                    return " = ";
+                case PredicateCondition.NotEqual:
+                    return " <> ";
                 case PredicateCondition.Greater:
                     return ">";
+                case PredicateCondition.GreaterOrEqual:
+                    return " >= ";
                 case PredicateCondition.Less:
                     return "<";
+                case PredicateCondition.LessOrEqual:
+                    return " <= ";
                 case PredicateCondition.In:
-                    return "IN";
+                    return " IN ";
                 case PredicateCondition.NotIn:
-                    return "NOT IN";
+                    return " NOT IN ";
+                case PredicateCondition.Like:
+                    return " LIKE ";
                 // todo: лень сразу писать все операторы :-)
                 default:
                     return null;

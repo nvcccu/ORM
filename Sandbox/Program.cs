@@ -40,11 +40,12 @@ namespace Sandbox {
 
             var q = new DaoTest()
                 .Select()
-                .Join(JoinType.Inner, new OfferCategory(), RetrieveMode.Retrieve)
-                .On(DaoTest.Fields.Id, PredicateCondition.Equal, OfferCategory.Fields.Id)
+                .Where(DaoTest.Fields.Id, PredicateCondition.Greater, 0)
+                .Where(DaoTest.Fields.DateCreated, PredicateCondition.Greater, new DateTime(1999, 2, 2))
+                .Where(DaoTest.Fields.Text, PredicateCondition.Equal, "text1")
                 .GetData()
                 .ToList();
-            var qq = q[0].GetJoinedEntity<OfferCategory>();
+         
             var w = 0;
         }
     }

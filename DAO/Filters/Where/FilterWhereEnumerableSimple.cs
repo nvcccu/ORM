@@ -6,17 +6,18 @@ using DAO.Extensions;
 namespace DAO.Filters.Where {
     public class FilterWhereBaseEnumerableSimple : FilterWhereBase {
         private IEnumerable<string> Value { get; set; }
-        public FilterWhereBaseEnumerableSimple(Enum field, PredicateCondition oper, IEnumerable<string> value) {
+        public FilterWhereBaseEnumerableSimple(LogicOperator logicOperator, Enum field, PredicateCondition oper, IEnumerable<string> value) {
+            LogicOperator = logicOperator;
             Field = field;
             Oper = oper;
             Value = value;
-            StringFormat = "{0}.{1} {2} {3} ";
+            StringFormat = "{0}, {1}.{2} {3} {4} ";
         }
         private string ValueToString() {
             return "(" + String.Join(", ", Value) + ") ";
         }
-        public override string TranslateToSql() {
-            return String.Format(StringFormat, Field.GetType().DeclaringType.Name, Field, Oper.GetMathOper(),
+        public override string TranslateToSql(bool isFirst) {
+            return String.Format(StringFormat, isFirst ? String.Empty :  LogicOperator.GetLogicOperator(), Field.GetType().DeclaringType.Name, Field, Oper.GetMathOper(),
                 ValueToString());
         }
     }

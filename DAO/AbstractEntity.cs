@@ -35,7 +35,6 @@ namespace DAO {
         /// Содержит набор where условий
         /// </summary>
         private List<FilterWhereBase> _filterWhere;
-        private List<GroupFilterWhere> _filterWhereGroups;
         
         /// <summary>
         /// Содержит набор SET для апдейта
@@ -67,7 +66,6 @@ namespace DAO {
             _dbAdapter = new DbAdapter();
             TableName = tableName;
             _filterWhere = new List<FilterWhereBase>();
-            _filterWhereGroups = new List<GroupFilterWhere>();
             _filterOrder = new List<FilterOrder>();
             _filterJoin = new List<FilterJoin>();
             _filterSet = new List<FilterSet>();
@@ -277,29 +275,7 @@ namespace DAO {
             return null;
         }
 
-        /// <summary>
-        /// Преобразует енамку типа джоина в символьное значение
-        /// todo: Эта штука явно должна быть не здесь
-        /// </summary>
-        /// <param name="joinType"></param>
-        /// <returns></returns>
-        private string GetJoinType(JoinType joinType) {
-            switch (joinType) {
-                case JoinType.Cross:
-                    return " CROSS ";
-                case JoinType.Inner:
-                    return " INNER ";
-                case JoinType.Left:
-                    return " LEFT ";
-                case JoinType.Outer:
-                    return " OUTER ";
-                case JoinType.Right:
-                    return " RIGHT ";
-                default:
-                    return null;
-            }
-        }
-
+ 
         /// <summary>
         /// Добавляет условие where
         /// </summary>
@@ -312,35 +288,35 @@ namespace DAO {
 //            return this;
 //        }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, int value) {
-            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value.ToString()));
+            _filterWhere.Add(new FilterWhereBaseSimple(LogicOperator.And, field, oper, value.ToString()));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, long value) {
-            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value.ToString()));
+            _filterWhere.Add(new FilterWhereBaseSimple(LogicOperator.And, field, oper, value.ToString()));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, string value) {
-            _filterWhere.Add(new FilterWhereBaseSimple(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseSimple(LogicOperator.And, field, oper, value));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, DateTime value) {
-            _filterWhere.Add(new FilterWhereBaseDate(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseDate(LogicOperator.And,field, oper, value));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<int> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => v.ToString())));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(LogicOperator.And, field, oper, value.Select(v => v.ToString())));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<long> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => v.ToString())));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(LogicOperator.And, field, oper, value.Select(v => v.ToString())));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<string> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(field, oper, value.Select(v => v.ToString())));
+            _filterWhere.Add(new FilterWhereBaseEnumerableSimple(LogicOperator.And, field, oper, value.Select(v => v.ToString())));
             return this;
         }
         public AbstractEntity<T> Where(Enum field, PredicateCondition oper, IEnumerable<DateTime> value) {
-            _filterWhere.Add(new FilterWhereBaseEnumerableDateTime(field, oper, value));
+            _filterWhere.Add(new FilterWhereBaseEnumerableDateTime(LogicOperator.And, field, oper, value));
             return this;
         }
 
@@ -504,27 +480,15 @@ namespace DAO {
         /// Транслирует все условия where в SQL
         /// </summary>
         /// <returns></returns>
-//        private void TranslateWhere() {
-//            if (!_filterWhere.Any()) {
-//                return;
-//            }
-//            var where = "WHERE ";
-//          
-//            where += _filterWhere.First().TranslateToSql();
-//            for (var i = 1; i < _filterWhere.Count; i++) {
-//                where += "AND " + _filterWhere[i].TranslateToSql();
-//            }
-//            _query += where;
-//            _filterWhere = new List<FilterWhereBase>();
-//        }
         private void TranslateWhere() {
-            if (!_filterWhereGroups.Any()) {
+            if (!_filterWhere.Any()) {
                 return;
             }
             var where = "WHERE ";
-            where += _filterWhereGroups.First().TranslateToSql();
+          
+            where += _filterWhere.First().TranslateToSql(true);
             for (var i = 1; i < _filterWhere.Count; i++) {
-                where += "AND " + _filterWhere[i].TranslateToSql();
+                where += _filterWhere[i].TranslateToSql(false);
             }
             _query += where;
             _filterWhere = new List<FilterWhereBase>();
@@ -539,7 +503,7 @@ namespace DAO {
             }
             var join = string.Empty;
             foreach (var filterJoin in _filterJoin) {
-                join += GetJoinType(filterJoin.JoinType) + "JOIN " + filterJoin.TargetTable.TableName + " ON ";
+                join += filterJoin.JoinType.GetJoinType() + "JOIN " + filterJoin.TargetTable.TableName + " ON ";
                 var joinCondition = filterJoin.JoinConditions.First();
                 join += filterJoin.TargetTable.TableName + "." + joinCondition.FieldTarget + joinCondition.Oper.GetMathOper() + joinCondition.FieldFrom.GetType().DeclaringType.Name + "." + joinCondition.FieldFrom + " ";
                 for (var i = 1; i < filterJoin.JoinConditions.Count; i++) {
@@ -588,32 +552,6 @@ namespace DAO {
         }
     }
 
-    /// <summary>
-    /// Типы join'ов
-    /// </summary>
-    public enum JoinType : short {
-        Inner,
-        Left,
-        Right,
-        Outer,
-        Cross
-    }
-
-    /// <summary>
-    /// Настройки извлечения данных присоединенных сущностей
-    /// </summary>
-    public enum RetrieveMode : short {
-        /// <summary>
-        /// Извлекать данные присоединенных сущностей
-        /// </summary>
-        Retrieve,
-
-        /// <summary>
-        /// Не извлекать данные присоединенных сущностей
-        /// </summary>
-        NonRetrieve
-    }
-
     public class JoinCondition {
         /// <summary>
         /// Поле исходной таблицы
@@ -630,22 +568,6 @@ namespace DAO {
         /// </summary>
         public Enum FieldTarget { get; set; }
 
-    }
-
-    /// <summary>
-    /// тип сортировки
-    /// </summary>
-    public enum OrderType : short {
-        /// <summary>
-        /// по возрастанию
-        /// </summary>
-        /// 
-        Asc = 0,
-
-        /// <summary>
-        /// по убыванию
-        /// </summary>
-        Desc = 1
     }
 
     /// <summary>
