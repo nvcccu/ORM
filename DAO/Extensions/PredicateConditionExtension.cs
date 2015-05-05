@@ -6,23 +6,23 @@ namespace DAO.Extensions {
         public static string GetPredicateCondition(this PredicateCondition oper) {
             switch (oper) {
                 case PredicateCondition.Equal:
-                    return " = ";
+                    return "=";
                 case PredicateCondition.NotEqual:
-                    return " <> ";
+                    return "<>";
                 case PredicateCondition.Greater:
                     return ">";
                 case PredicateCondition.GreaterOrEqual:
-                    return " >= ";
+                    return ">=";
                 case PredicateCondition.Less:
                     return "<";
                 case PredicateCondition.LessOrEqual:
-                    return " <= ";
+                    return "<=";
                 case PredicateCondition.In:
-                    return " IN ";
+                    return "IN";
                 case PredicateCondition.NotIn:
-                    return " NOT IN ";
+                    return "NOT IN";
                 case PredicateCondition.Like:
-                    return " LIKE ";
+                    return "LIKE";
                 default:
                     throw new Exception("Неизвестное условие предиката.");
             }

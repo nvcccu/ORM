@@ -19,7 +19,6 @@ namespace DAO {
     public abstract class AbstractEntity<T> : IAbstractEntity where T: new() {
         private readonly DbAdapter _dbAdapter;
         private FilterWhereCollection _filterWhere;
-        private List<FilterWhereBase> _filterWhere__old;
         private List<FilterSet> _filterSet;
         private List<FilterJoin> _filterJoin;
         private List<FilterOrder> _filterOrder;
@@ -38,7 +37,6 @@ namespace DAO {
         protected AbstractEntity(string tableName) {
             _dbAdapter = new DbAdapter();
             _filterWhere = new FilterWhereCollection();
-            _filterWhere__old = new List<FilterWhereBase>();
             _filterOrder = new List<FilterOrder>();
             _filterJoin = new List<FilterJoin>();
             _filterSet = new List<FilterSet>();
@@ -275,11 +273,6 @@ namespace DAO {
             return this;
         }
 
-        public AbstractEntity<T> Where(IEnumerable<FilterWhereBase> filterWhere) {
-            _filterWhere__old.AddRange(filterWhere);
-            return this;
-        }
-
         public AbstractEntity<T> Join(JoinType joinType, IAbstractEntity targetTable, RetrieveMode retrieveMode) {
             JoinedEntities.Add(targetTable);
             _filterJoin.Add(new FilterJoin {
@@ -351,21 +344,8 @@ namespace DAO {
             return this;
         }
 
-//        private void TranslateWhere() {
-//            if (!_filterWhere__old.Any()) {
-//                return;
-//            }
-//            var where = "WHERE ";
-//            where += _filterWhere__old.First().TranslateToSql(true);
-//            for (var i = 1; i < _filterWhere__old.Count; i++) {
-//                where += _filterWhere__old[i].TranslateToSql(false);
-//            }
-//            _query += where;
-//            _filterWhere__old = new List<FilterWhereBase>();
-//        }
-
         private void TranslateWhere() {
-            _query += _filterWhere.TranslateToSql(true);
+            _query += "WHERE" + _filterWhere.TranslateToSql(true);
             _filterWhere = new FilterWhereCollection();
         }
 

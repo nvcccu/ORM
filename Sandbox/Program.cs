@@ -5,6 +5,7 @@ using DAO;
 using DAO.Attributes;
 using DAO.Enums;
 using DAO.Filters.Where;
+using DAO.Helpers;
 
 namespace Sandbox {
     public class DaoTest : AbstractEntity<DaoTest> {
@@ -64,24 +65,23 @@ namespace Sandbox {
                 .Where(DaoTest.Fields.Id, PredicateCondition.Greater, 0)
                 .Where(DaoTest.Fields.DateCreated, PredicateCondition.Greater, new DateTime(1999, 2, 2))
                 .Where(DaoTest.Fields.Text, PredicateCondition.Equal, "text1")
-                .Where(new FilterWhereCollection(new FilterWhereBase[] {
-                    new FilterWhereDate(LogicOperator.And, DaoTest.Fields.DateCreated, PredicateCondition.Greater,
+                .Where(new FilterWhereCollection(new [] {
+                    WhereHelper.Where(DaoTest.Fields.DateCreated, PredicateCondition.Greater,
                         new DateTime(1999, 2, 2)),
-                    new FilterWhereDate(LogicOperator.Or, DaoTest.Fields.DateCreated, PredicateCondition.Greater,
+                    WhereHelper.Where(DaoTest.Fields.DateCreated, PredicateCondition.Greater,
                         new DateTime(1999, 2, 2)),
                 }, new[] {
                     new FilterWhereCollection(
-                        new FilterWhereBase[] {
-                            new FilterWhereDate(LogicOperator.And, DaoTest.Fields.DateCreated,
+                        new [] {
+                            WhereHelper.Where(DaoTest.Fields.DateCreated,
                                 PredicateCondition.Greater, new DateTime(1999, 2, 2)),
-                            new FilterWhereDate(LogicOperator.Or, DaoTest.Fields.DateCreated, PredicateCondition.Greater,
+                            WhereHelper.Where(DaoTest.Fields.DateCreated, PredicateCondition.Greater,
                                 new DateTime(1999, 2, 2)),
                         }, null)
                 }))
                 .Where(DaoTest.Fields.Text, PredicateCondition.Equal, "text2")
                 .GetData()
                 .ToList();
-         
             var w = 0;
         }
     }

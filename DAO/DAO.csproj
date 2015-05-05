@@ -67,6 +67,7 @@
     <Compile Include="Filters\Where\FilterWhereEnumerableSimple.cs" />
     <Compile Include="Filters\Where\FilterWhereSimple.cs" />
     <Compile Include="Filters\Where\FilterWhereBase.cs" />
+    <Compile Include="Helpers\WhereHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

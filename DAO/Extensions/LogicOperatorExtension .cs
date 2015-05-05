@@ -6,9 +6,9 @@ namespace DAO.Extensions {
         public static string GetLogicOperator(this LogicOperator oper) {
             switch (oper) {
                 case LogicOperator.And:
-                    return " AND ";
+                    return "AND";
                 case LogicOperator.Or:
-                    return " OR ";
+                    return "OR";
                 default:
                     throw new Exception("Неизвестный тип логического оператора.");
             }
